@@ -1,24 +1,111 @@
-from fastapi import FastAPI, Depends, Path, Query, APIRouter, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
+# routers/employees.py
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
 from config.database import db_session
 from middlewares.jwt_bearer import JWTBearer
-from models.employees import Employees as EmployeesModel
-from services.employees import create_employee, get_employee
-from schemas.employees import EmployeeProfile
+
+from services.employees import (
+    create_employee,
+    get_employees,
+    get_employee as get_employee_service,
+    update_employee as update_employee_service,
+    delete_employee as delete_employee_service,
+)
+from schemas.employees import EmployeeCreate, EmployeeUpdate, EmployeeOut
+
 
 employees_router = APIRouter(
     prefix="/employees",
     tags=["employees"],
-    dependencies=[Depends(JWTBearer())]
+    dependencies=[Depends(JWTBearer())],  # protege todos los endpoints con JWT
 )
 
-@employees_router.post("/", response_model=None, status_code=201) #Añadir un schema para la respuesta de la creación del usuario restaurante
-def create_new_employee(employee: EmployeeProfile, db: Session = Depends(db_session)): #Crear el esquema de creación del perfil de restuarante
+
+@employees_router.post(
+    "/",
+    response_model=EmployeeOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_employee(
+    employee_in: EmployeeCreate,
+    db: Session = Depends(db_session),
+):
     try:
-        new_profile= create_employee(db, employee)
-        return new_profile
+        return create_employee(db, employee_in)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-#Pendiente crear los endpoints para modificar, obtener y eliminar restaurantes
+        # Aquí podrías capturar IntegrityError para email duplicado, etc.
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+
+@employees_router.get(
+    "/",
+    response_model=List[EmployeeOut],
+    status_code=status.HTTP_200_OK,
+)
+def list_employees(
+    db: Session = Depends(db_session),
+):
+    """
+    Lista todos los empleados.
+    """
+    return get_employees(db)
+
+
+@employees_router.get(
+    "/{id_employee}",
+    response_model=EmployeeOut,
+    status_code=status.HTTP_200_OK,
+)
+def get_employee_detail(
+    id_employee: int,
+    db: Session = Depends(db_session),
+):
+    employee = get_employee_service(db, id_employee)
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee not found",
+        )
+    return employee
+
+
+@employees_router.put(
+    "/{id_employee}",
+    response_model=EmployeeOut,
+    status_code=status.HTTP_200_OK,
+)
+def update_employee_detail(
+    id_employee: int,
+    employee_in: EmployeeUpdate,
+    db: Session = Depends(db_session),
+):
+    employee = update_employee_service(db, id_employee, employee_in)
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee not found",
+        )
+    return employee
+
+
+@employees_router.delete(
+    "/{id_employee}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_employee_detail(
+    id_employee: int,
+    db: Session = Depends(db_session),
+):
+    deleted = delete_employee_service(db, id_employee)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee not found",
+        )
+    return
