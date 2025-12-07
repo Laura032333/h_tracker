@@ -12,7 +12,7 @@ class Project(Base):
     id_project = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
 
     # OJO: esto asume que en Client tienes clients.id_client como PK (INT)
-    id_client = Column(Integer, ForeignKey("clients.second_id_client"), nullable=False)
+    id_client = Column(String, ForeignKey("clients.second_id_client"), nullable=False)
 
     project_name = Column(String, nullable=False)
     billable_default = Column(Boolean, nullable=False, default=True)
