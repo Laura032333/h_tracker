@@ -7,8 +7,6 @@ class Client(Base):
 
     __tablename__ = "clients"
 
-  
-
     # Claves de negocio (entidad / grupo), ya NO como PK
     primary_id_client = Column(String, primary_key=True, default=lambda: str(uuid.uuid4())) #entidad
     second_id_client = Column(String, primary_key=True, default=lambda: str(uuid.uuid4())) #grupo
@@ -28,3 +26,4 @@ class Client(Base):
     # Relaciones: deben coincidir con lo que pusimos en Project y TimeEntry
     projects = relationship("Project", back_populates="client")
     time_entries = relationship("TimeEntry", back_populates="client")
+    invoices = relationship("Invoice", back_populates="client")

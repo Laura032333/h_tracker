@@ -9,9 +9,9 @@ class TimeEntry(Base):
     __tablename__ = "time_entries"
 
     id_hours = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    id_employee = Column(Integer, ForeignKey("employees.id_employee"), nullable=False)
-    id_project = Column(Integer, ForeignKey("projects.id_project"), nullable=False)
-    id_client = Column(Integer, ForeignKey("clients.second_id_client"), nullable=False)
+    id_employee = Column(String, ForeignKey("employees.id_employee"), nullable=False)
+    id_project = Column(String, ForeignKey("projects.id_project"), nullable=False)
+    id_client = Column(String, ForeignKey("clients.second_id_client"), nullable=False)
     week_start = Column(Date, ForeignKey("weeks.week_start"), nullable=False)
     total_hours = Column(Numeric(6, 2), nullable=False) 
     billable = Column(Boolean, nullable=False, default=True)
